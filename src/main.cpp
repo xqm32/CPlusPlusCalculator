@@ -91,16 +91,20 @@ int calc(char *e) {
             } else if (*e == '(') {
                 opStack.push(*e++);
                 continue;
-            } else if (*e == '#' && opStack.depth() > 2) {
-                // 若操作符栈里至少有两个元素 ('#', operator, ...)
-                b = nStack.pop();
-                a = nStack.pop();
+            } else if (*e == '#') {
+                if (opStack.top() == '#') {
+                    return nStack.pop();
+                } else if (opStack.depth() > 1) {
+                    // 若操作符栈里至少有两个元素 ('#', operator, ...)
+                    b = nStack.pop();
+                    a = nStack.pop();
 #ifdef DEBUG
-                printf("[Cacu]\t%d %c %d\n", a, opStack.top(), b);
+                    printf("[Cacu]\t%d %c %d\n", a, opStack.top(), b);
 #endif
-                nStack.push(getAns(opStack.pop(), a, b));
-                // 这里使用 continue 避免循环终止
-                continue;
+                    nStack.push(getAns(opStack.pop(), a, b));
+                    // 这里使用 continue 避免循环终止
+                    continue;
+                }
             } else if (getPrior(opStack.top()) >= getPrior(*e)) {
                 b = nStack.pop();
                 a = nStack.pop();
