@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <cstring>
 
+// #define DEBUG
+#define HAS_ARG
 #define N 1024
 
 class Stack {
@@ -11,10 +13,12 @@ class Stack {
     int __top = -1;
 
    public:
+#ifdef DEBUG
     void print(const char *fmt) {
         for (int i = 0; i <= __top; ++i) printf(fmt, __stack[i]);
         printf("\n");
     }
+#endif
     void push(int n) { __stack[++__top] = n; }
     int pop() { return __stack[__top--]; }
     int top() const { return __stack[__top]; }
@@ -68,6 +72,7 @@ int calc(char *e) {
         return -1;
     }
     for (int a, b; *e;) {
+#ifdef DEBUG
         printf("[Rest]\t%s\n", e);
         printf("[Stack]\tnStack: \t");
         nStack.print("%d ");
@@ -75,6 +80,7 @@ int calc(char *e) {
         opStack.print("%c ");
         printf("\n");
         printf("[Read]\t%c\n", *e);
+#endif
         if (isalnum(*e)) {
             nStack.push(strtol(e, &e, 0));
         } else {
@@ -89,23 +95,33 @@ int calc(char *e) {
                 // 若操作符栈里至少有两个元素 ('#', operator, ...)
                 b = nStack.pop();
                 a = nStack.pop();
+#ifdef DEBUG
                 printf("[Cacu]\t%d %c %d\n", a, opStack.top(), b);
+#endif
                 nStack.push(getAns(opStack.pop(), a, b));
                 // 这里使用 continue 避免循环终止
                 continue;
             } else if (getPrior(opStack.top()) >= getPrior(*e)) {
                 b = nStack.pop();
                 a = nStack.pop();
+#ifdef DEBUG
                 printf("[Cacu]\t%d %c %d\n", a, opStack.top(), b);
+#endif
                 nStack.push(getAns(opStack.pop(), a, b));
             }
             opStack.push(*e++);
         }
     }
+#ifdef DEBUG
+    printf("\n");
+#endif
     return nStack.pop();
 }
 
 int main(int argc, char **argv) {
-    // printf("\nThe answer is: %d\n", calc(argv[1]));
+#ifdef HAS_ARG
+    printf("The answer is: %d\n", calc(argv[1]));
+#else
     printf("The answer is: %d\n", calc("#12+5*(2+3)*6/2-4#"));
+#endif
 }
