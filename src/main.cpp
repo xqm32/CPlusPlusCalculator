@@ -2,29 +2,123 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <stdexcept>
 
 // #define DEBUG
-#define HAS_ARG
+// #define HAS_ARG
 #define N 1024
+
+template <typename T>
+class Node {
+   public:
+    Node *prev = nullptr;
+    Node *next = nullptr;
+    T value;
+    Node(const T &n) { value = n; }
+};
+
+template <typename T>
+class LinkedList {
+   private:
+    Node<T> *head = nullptr;
+    Node<T> *rear = nullptr;
+    size_t len = 0;
+
+   public:
+    void push_back(const T &n) {
+        if (empty())
+            head = rear = new Node<T>(n);
+        else {
+            auto *t = rear;
+            rear->next = new Node<T>(n);
+            rear = rear->next;
+            rear->prev = t;
+        }
+        len += 1;
+    }
+    void push_front(const T &n) {
+        if (empty())
+            head = rear = new Node<T>(n);
+        else {
+            auto *t = head;
+            head->prev = new Node<T>(n);
+            head = head->prev;
+            head->next = t;
+        }
+        len += 1;
+    }
+    T pop_back() {
+        if (empty())
+            throw std::out_of_range("Pop back from empty list");
+        else {
+            auto t = rear->value;
+            if (head == rear) {
+                delete head;
+                head = rear = nullptr;
+            } else {
+                rear = rear->prev;
+                delete head->prev;
+            }
+            len -= 1;
+            return t;
+        }
+    }
+    T pop_front() {
+        if (empty())
+            throw std::out_of_range("Pop front from empty list");
+        else {
+            auto t = head->value;
+            if (head == rear) {
+                delete head;
+                head = rear = nullptr;
+            } else {
+                head = head->next;
+                delete head->prev;
+            }
+            len -= 1;
+            return t;
+        }
+    }
+    T front() {
+        if (empty())
+            throw std::out_of_range("Get front from empty list");
+        else
+            return head->value;
+    }
+    T back() {
+        if (empty())
+            throw std::out_of_range("Get back from empty list");
+        else
+            return rear->value;
+    }
+    T length() { return len; }
+    int empty() { return len == 0; }
+    void print() {
+        if (empty())
+            std::cout << "(Empty list)" << std::endl;
+        else {
+            for (auto *t = head; t != rear; t = t->next) {
+                std::cout << t->value << " -> ";
+            }
+            std::cout << rear->value << std::endl;
+        }
+    }
+};
 
 class Stack {
    private:
-    int __stack[N] = {0};
-    int __top = -1;
+    LinkedList<int> __stack;
 
    public:
 #ifdef DEBUG
-    void print(const char *fmt) {
-        for (int i = 0; i <= __top; ++i) printf(fmt, __stack[i]);
-        printf("\n");
-    }
+    void print(const char *fmt) { __stack.print(); }
 #endif
-    void push(int n) { __stack[++__top] = n; }
-    int pop() { return __stack[__top--]; }
-    int top() const { return __stack[__top]; }
-    int empty() const { return !(__top + 1); }
-    int full() const { return __top < N; }
-    int depth() const { return __top + 1; }
+    void push(int n) { __stack.push_back(n); }
+    int pop() { return __stack.pop_back(); }
+    int top() { return __stack.back(); }
+    int empty() { return __stack.empty(); }
+    int depth() { return __stack.length(); }
 };
 
 int getPrior(char c) {
@@ -84,7 +178,7 @@ int calc(char *e) {
         if (isalnum(*e)) {
             nStack.push(strtol(e, &e, 0));
         } else {
-            if (opStack.top() == ')') {
+            if (!opStack.empty() && opStack.top() == ')') {
                 opStack.pop();
                 opStack.pop();
                 continue;
@@ -92,7 +186,7 @@ int calc(char *e) {
                 opStack.push(*e++);
                 continue;
             } else if (*e == '#') {
-                if (opStack.top() == '#') {
+                if (!opStack.empty() && opStack.top() == '#') {
                     return nStack.pop();
                 } else if (opStack.depth() > 1) {
                     // 若操作符栈里至少有两个元素 ('#', operator, ...)
